@@ -1,0 +1,19 @@
+-- Reports any scheduled jobs that are broken. Includes materialized views that are damaged (next date more than a year out).
+--    Current Version: v1
+--    Documentation:
+--      This snippet relies on the Sysadmin.Schemas custom flags metadata that we create. An alternate version of this could
+--      be built to exclude Oracle managed schemas.
+
+SELECT dr.rowner, dr.rname
+  FROM dba_refresh dr
+ WHERE dr.next_date > sysdate + 370 -- More than a year out
+    OR dr.broken = 'Y'
+ UNION ALL
+SELECT j.owner, j.job_name
+  FROM dba_scheduler_jobs j
+ WHERE j.owner NOT IN (SELECT schemas.name 
+                         FROM sysadmin.schemas 
+                        WHERE schemas.built_in = 'Y' 
+                           OR schemas.programmer = 'Y')
+   AND j.state = 'BROKEN'
+   AND j.enabled = 'TRUE';
