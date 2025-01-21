@@ -1,9 +1,9 @@
-/*
-	Reports all blocking sessions in SQL Server.
+-- Reports all blocking sessions in SQL Server.
+--    Current Version: v2
+--    Documentation:
+--       If SPID = 0, this session is causing the block.
+--       If SPID != 0, the reported SPID is the blocking session.
 
-	If SPID = 0, this session is causing the block.
-	If SPID != 0, the reported SPID is the blocking session.
-*/
 SELECT * 
   FROM sys.sysprocesses p
  WHERE p.blocked > 0 
