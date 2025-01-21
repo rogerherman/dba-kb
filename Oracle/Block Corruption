@@ -1,0 +1,7 @@
+-- Reports any corrupted blocks in the Oracle data files.
+--    Version: v1
+--    Documentation:
+--       Corrupted blocks are populated when running the verify through RMAN.
+
+SELECT "FILE#","BLOCK#","BLOCKS","CORRUPTION_CHANGE#","CORRUPTION_TYPE","CON_ID"
+  FROM v$database_block_corruption;
