@@ -1,0 +1,73 @@
+-- Reports any blocked or blocking sessions.
+--    Current Version: v1
+--    Documentation:
+--       Comparable to Oracle Enterprise Manager's blocking sessions page info.
+--       Includes both commands needed to kill a session, either from a DBA session or the process directly on the DB server.
+
+WITH
+  blocking_sessions AS (
+      SELECT s.username, s.sid, s.serial#, s.sql_id, s.prev_sql_id, s.wait_class, s.event, s.seconds_in_wait, s.machine, s.logon_time, l.id1, l.id2,
+             NULL AS blocking_session_id, s.paddr
+        FROM v$lock l
+        JOIN v$session s
+          ON s.sid = l.sid
+       WHERE l.block = 1 -- (1 = This session is blocking other sessions)
+    ),
+  blocked_sessions AS (
+      SELECT s.username, s.sid, s.serial#, s.sql_id, s.prev_sql_id, s.wait_class, s.event, s.seconds_in_wait, s.machine, s.logon_time, l.id1, l.id2,
+             (SELECT b.sid
+                FROM blocking_sessions b
+               WHERE b.id1 = l.id1
+                 AND b.id2 = l.id2) AS blocking_session_id,
+             s.paddr
+        FROM v$lock l
+        JOIN v$session s
+          ON s.sid = l.sid
+       WHERE l.request > 0 -- Lock mode. (Exclusive, shared, etc.) 0 = none
+         AND (l.id1, l.id2) IN (SELECT l.id1, l.id2 FROM blocking_sessions)
+    )
+SELECT NVL(i.username, '-') AS username,
+       NVL(i.sid, 0) AS sid,
+       NVL(i.serial#, 0) AS serial#,
+       NVL(TO_CHAR(i.blocking_session_id), '-') AS blocking_sid,
+       NVL(i.machine, '-') AS machine,
+       NVL(i.sql_id, '-') AS sql_id,
+       NVL(i.prev_sql_id, '-') AS prev_sql_id,
+       NVL(i.wait_class, '-') AS wait_class,
+       NVL(i.wait_event, '-') AS wait_event,
+       NVL(i.seconds_in_wait, 0) AS seconds_in_wait,
+       NVL(i.logon_time, sysdate) AS logon_time,
+       'Alter System Kill Session ''' || i.sid || ',' || i.serial# || ''' immediate;' AS session_kill,
+       'ORAKILL ' || sys_context('USERENV', 'DB_NAME') || ' ' || p.spid AS ora_kill
+  FROM (SELECT blocking.username, 
+               blocking.blocking_session_id,
+               (SELECT COUNT(*)
+                  FROM blocked_sessions blocked
+                 WHERE blocking.id1 = blocked.id1
+                   AND blocking.id2 = blocked.id2) AS sessions_blocked,
+               blocking.sid, blocking.serial#, blocking.machine, blocking.sql_id, blocking.prev_sql_id,
+               blocking.wait_class, blocking.event AS wait_event, blocking.seconds_in_wait, blocking.logon_time,
+               blocking.paddr,
+               COALESCE(blocking.blocking_session_id, blocking.sid) AS sortSID,
+               (SELECT COUNT(*)
+                  FROM blocked_sessions blocked
+                 WHERE blocking.id1 = blocked.id1
+                   AND blocking.id2 = blocked.id2) AS sortSessions
+          FROM blocking_sessions blocking
+         UNION
+        SELECT blocked.username,
+               blocked.blocking_session_id,
+               0 AS sessions_blocked,
+               blocked.sid, blocked.serial#, blocked.machine, blocked.sql_id, blocked.prev_sql_id,
+               blocked.wait_class, blocked.event AS wait_event, blocked.seconds_in_wait, blocked.logon_time,
+               blocked.paddr,
+               COALESCE(blocked.blocking_session_id, blocked.sid) as sortSID,
+               (SELECT COUNT(*)
+                  FROM blocked_sessions blocked1
+                 WHERE blocked1.blocking_session_id = blocked.blocking_session_id) AS sortSessions
+          FROM blocked_sessions blocked) i
+  JOIN v$process p
+    ON p.addr = i.paddr
+ WHERE i.seconds_in_wait > 0 -- Trying to suppress the many alerts that send reporting 0 seconds blocking.
+    OR i.blocking_session_id IS NULL -- The actual blocking sessions, in case the seconds in wait are not reported.
+ ORDER BY sortSessions DESC, sortSID, blocking_session_id NULLS FIRST;
