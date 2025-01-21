@@ -1,0 +1,33 @@
+-- Remove the stat tables before the next run
+DROP TABLE #IO_Stats_Before;
+DROP TABLE #IO_Stats_Diff;
+
+-- Gather the starting point virtual stats
+SELECT b.name, a.database_id, a.[FILE_ID], a.num_of_reads, a.num_of_bytes_read, a.io_stall_read_ms,
+       a.num_of_writes, a.num_of_bytes_written, a.io_stall_write_ms, a.io_stall, GetDate() AS StartTime
+  INTO #IO_Stats_Before
+  FROM sys.dm_io_virtual_file_stats(NULL, NULL) a 
+ INNER JOIN sys.databases b 
+    ON a.database_id = b.database_id;
+
+-- Add a 15 second delay and regather the stats, running a diff against the results.
+--    Cache the results for later analysis.
+WAITFOR DELAY '00:00:15'
+SELECT a.name AS DatabaseName, a.[FILE_ID] AS db_fileid,
+	   (b.io_stall_read_ms - a.io_stall_read_ms)/ CAST(1000 as DECIMAL(10,1)) AS read_diff,
+	   (b.io_stall_write_ms - a.io_stall_write_ms)/ CAST(1000 as DECIMAL(10,1)) AS write_diff,
+	   (b.io_stall - a.io_stall)/ CAST(1000 as DECIMAL(10,1)) AS stall_diff,
+	   DATEDIFF(s,StartTime, GETDATE()) AS duration_seconds
+  INTO #IO_Stats_Diff
+  FROM #IO_Stats_Before a
+ INNER JOIN sys.dm_io_virtual_file_stats(NULL, NULL) b 
+    ON a.database_id = b.database_id 
+   AND a.[file_id] = b.[file_id];
+
+-- View the stats differences
+SELECT databaseName, db_fileid, read_diff, write_diff, stall_diff, duration_seconds
+  FROM #IO_Stats_Diff
+ WHERE read_diff  > 0.00001
+    OR write_diff > 0.00001
+	OR stall_diff > 0.00001
+ ORDER BY read_diff + write_diff + stall_diff DESC;
