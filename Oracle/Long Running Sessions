@@ -1,0 +1,11 @@
+-- Reports any long running sessions
+--    Current Version: v1
+--    Documentation:
+--       Long running sessions are defined as any with a start time over 24 hours.
+--       These are frequently a byproduct from a system outage.
+
+SELECT s.*
+  FROM v$session s
+ WHERE s.status NOT IN ('KILLED', 'SNIPED', 'INACTIVE')
+   AND s.username NOT IN (SELECT schemas.name FROM sysadmin.schemas WHERE schemas.built_in = 'Y' OR schemas.programmer = 'Y')
+   AND s.last_call_et >= (1*24*60*60);
