@@ -1,0 +1,19 @@
+-- Reports any invalid objects
+--    Current Version: v1
+--    Documentation:
+--       This version of the query relies on the custom Sysadmin.Schemas table.
+--       A future version of this query could exclude Oracle managed schemas
+--       for largely the same effect. Programmer and Third Party flags are 
+--       consulted as well, but those could be ignored if not applicable to DB.
+
+SELECT owner, object_name, object_type, last_ddl_time
+  FROM dba_objects
+ WHERE dba_objects.status != 'VALID'
+   AND dba_objects.object_type NOT LIKE 'JAVA%'
+   AND dba_objects.object_type != 'MATERIALIZED VIEW'
+   AND dba_objects.owner IN (SELECT schemas.name
+                               FROM sysadmin.schemas
+                              WHERE schemas.built_in IS NULL 
+                                AND schemas.programmer IS NULL
+                                AND schemas.third_party IS NULL)
+ ORDER BY owner, object_name, object_type;
