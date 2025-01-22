@@ -1,0 +1,21 @@
+-- Reports any indexes that are invalid. Includes index partitions in results.
+--    Current Version: v1
+--    Documentation:
+--       Along with the reported invalid indexes, this query returns the DDL needed to 
+--       rebuild them. Includes support for index subpartitions as well.
+--       This version of the query relies on the custom Sysadmin.Schemas table. A future version 
+--       of this query could be written to exclude Oracle managed schemas for the same effect.
+
+SELECT owner, index_name, NULL AS partition_name, status, 'ALTER INDEX ' || owner || '.' || index_name || ' REBUILD ONLINE;' AS rebuild_ddl
+  FROM dba_indexes ind
+ WHERE (   ind.status NOT IN ('VALID', 'N/A')
+        OR domidx_status != 'VALID'
+        OR domidx_opstatus != 'VALID')
+   AND ind.owner NOT IN (SELECT schemas.name FROM sysadmin.schemas WHERE schemas.built_in = 'Y')
+ UNION ALL
+SELECT part.index_owner AS owner, part.index_name, part.partition_name, part.status, 
+       'ALTER INDEX ' || part.index_owner || '.' || part.index_name || ' REBUILD SUBPARTITION ' || part.partition_name || ' ONLINE;' AS rebuild_ddl
+  FROM dba_ind_partitions part
+ WHERE (   part.status != 'USABLE'
+        OR part.domidx_opstatus != 'USABLE')
+   AND part.index_owner NOT IN (SELECT schemas.name FROM sysadmin.schemas WHERE schemas.built_in = 'Y');
