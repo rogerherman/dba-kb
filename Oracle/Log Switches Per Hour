@@ -1,0 +1,12 @@
+-- Reports the log switches that occurred within the last hour.
+--    Current Version: v1
+--    Documentation:
+--       This is being used as a metric for undersized or overactive logs.
+--       If there are no switches within the last hour, the logs are too large for timely recovery.
+--       However, if the logs switch too many times, your system is either overactive or poorly sized.
+--       Ideally, you want 3-4 log switches per hour under load. Will need to consider time of year,
+--       if the metrics are low, etc.
+
+SELECT recid, stamp, thread#, sequence#, first_change#, first_time, next_change#, resetlogs_change#, resetlogs_time, con_id
+  FROM v$log_history
+ WHERE first_time >= sysdate - 1/24;
