@@ -1,0 +1,21 @@
+-- Reports any tables marked as NOLOGGING.
+--    Current Version: v1
+--    Documentation:
+--       This version of the query relies on the custom Sysadmin.schemas table.
+--       This can be changed to exclude the Oracle managed schemas.
+
+SELECT 'TABLESPACE' AS object_type, NULL AS owner, ts.tablespace_name AS object_name
+  FROM dba_tablespaces ts
+ WHERE ts.logging = 'NOLOGGING'
+   AND ts.contents != 'TEMPORARY'
+ UNION ALL
+SELECT 'TABLE' AS object_type, tb.owner, tb.table_name AS object_name
+  FROM dba_tables tb
+ WHERE tb.logging = 'NO'
+   AND tb.partitioned = 'NO' 
+   AND tb.temporary = 'N'
+   AND tb.iot_type IS NULL 
+   AND tb.owner NOT IN (SELECT schemas.name
+                          FROM sysadmin.schemas
+                         WHERE schemas.built_in = 'Y'
+                            OR schemas.programmer = 'Y');
