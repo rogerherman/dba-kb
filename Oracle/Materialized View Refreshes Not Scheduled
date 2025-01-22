@@ -1,0 +1,14 @@
+-- Reports any materialized views that do not have a set refresh schedule, but should.
+--    Current Version: v1
+--    Documentation:
+--       Purposely excluding any materialized views set to refresh on demand.
+--       Newer versions of Oracle use scheduled jobs to manage the automation
+--       for materialized view refreshes.
+
+SELECT m.owner, m.mview_name, m.refresh_method, r.interval, r.next_date, r.job_name
+  FROM dba_mviews m
+  LEFT JOIN dba_refresh r
+    ON m.owner = r.rowner
+   AND m.mview_name = r.rname
+ WHERE r.job_name IS NULL
+   AND m.refresh_mode != 'DEMAND';
