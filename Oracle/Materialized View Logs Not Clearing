@@ -1,0 +1,9 @@
+-- Reports any materialized view logs that are not being cleared
+--    Current Version: v1
+--    Documentation:
+--       We are using this as a metric for materialized view refreshes that are not fully clearing
+--       their associated logs. This can lead to slower or nonfunctioning indexes.
+
+SELECT l.log_owner, l.master, l.log_table, l.last_purge_date
+  FROM dba_mview_logs l
+ WHERE l.last_purge_date < sysdate - 1;
