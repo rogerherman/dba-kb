@@ -1,0 +1,41 @@
+-- Reports any tablespace that is critically filled.
+--    Current Version: v1
+--    Documentation:
+--       Critically filled is defined as less than 4 GBs free with 95% utilization.
+--       That way, even very large tablespaces will not raise alarm if some space is still available.
+--       A future version may we modified to derive the TEMP tablespaces, as opposed to hard-coding
+--       the name of one I currently expect.
+
+WITH
+  datafile_stats AS (
+      select kbytes_alloc, case when max_size_kb = 0 then kbytes_alloc else max_size_kb end as max_size_kb, tablespace_name
+        from (select sum(bytes)/1024 AS kbytes_alloc, 
+                     sum(maxbytes)/1024 AS max_size_kb,
+                     tablespace_name 
+                from sys.dba_data_files 
+               group by tablespace_name)
+    ),
+  free_space AS (
+      select sum(bytes)/1024 AS kbytes_free, 
+             max(bytes)/1024 max_free_kb,
+             tablespace_name
+        from sys.dba_free_space 
+       group by tablespace_name
+    )
+SELECT tablespace_name, pct_used, free_space_mb
+  FROM (SELECT df.tablespace_name, df.kbytes_alloc, fs.kbytes_free, df.max_size_kb,
+               CASE WHEN df.max_size_kb < df.kbytes_alloc
+                    THEN round((fs.kbytes_free / df.kbytes_alloc) * 100, 2)
+                    ELSE round(((df.kbytes_alloc - fs.kbytes_free) / df.max_size_kb) * 100, 2)
+                     END AS pct_used,
+               CASE WHEN df.max_size_kb < df.kbytes_alloc
+                    THEN round(fs.kbytes_free / 1024, 2)
+                    ELSE round(((df.max_size_kb - df.kbytes_alloc) + fs.kbytes_free) / 1024, 2)
+                     END AS free_space_mb
+          FROM datafile_stats df
+          JOIN free_space fs
+            ON fs.tablespace_name = df.tablespace_name
+         WHERE df.tablespace_name != 'UNDOTBS1')
+ WHERE free_space_mb < 4096
+   AND pct_used > 95
+ ORDER BY tablespace_name;
