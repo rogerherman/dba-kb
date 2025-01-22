@@ -1,0 +1,15 @@
+-- Reports all PL/SQL objects compiled for debug.
+--    Current Version: v1
+--    Documentation:
+--       This version of the query relies on the custom Sysadmin.schemas table.
+--       An updated version could instead exclude any Oracle managed schemas.
+--       The focus of this report is to find debug PL/SQL in an environment, where
+--       slower running code would not be wanted.
+
+SELECT pos.owner, pos.name
+  FROM dba_plsql_object_settings pos
+ WHERE pos.plsql_debug = 'TRUE'
+   AND pos.owner NOT IN (SELECT schemas.name 
+                           FROM sysadmin.schemas
+                          WHERE schemas.built_in = 'Y' 
+                             OR schemas.programmer = 'Y');
