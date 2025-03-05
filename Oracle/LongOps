@@ -1,0 +1,10 @@
+-- Reports any long running operations that are registered with Oracle.
+--    Current Version: v1
+--    Documentation:
+--       Long Ops can be registered manually in PL/SQL or automatically for certain actions (index rebuilds, table scans, RMAN backups, etc).
+
+SELECT sl.sid, sl.serial#, sl.username, sl.opname, sl.time_remaining, sl.sofar, sl.totalwork,
+       to_char(sl.start_time, 'mm/dd/yyyy hh24:mi:ss am') AS fm_start_time,
+       to_char(sl.last_update_time, 'mm/dd/yyyy hh24:mi:ss am') AS fm_last_update_time
+  FROM v$session_longops sl
+ WHERE sl.time_remaining > 0;
