@@ -1,0 +1,16 @@
+-- Reports any tables with stale stats and provides the DDL to regather statistics.
+--    Current Version: v1
+--    Documentation:
+--       This version of the query relies on the custom Sysadmin.Schemas table. A future version 
+--       of this query could be written to exclude Oracle managed schemas for the same effect.
+
+SELECT owner, table_name, num_rows, chain_cnt, last_analyzed, global_stats, user_stats, stale_stats,
+       'EXEC dbms_stats.gather_table_stats(''' || owner || ''', ''' || table_name || ''', method_opt=>''for all columns size'', cascade => true, degree=>2);' AS gather_stats_ddl
+  FROM dba_tab_statistics
+ WHERE stale_stats = 'YES'
+   AND owner NOT IN (SELECT name FROM sysadmin.schemas WHERE built_in = 'Y' OR programmer = 'Y' OR third_party = 'Y')
+   AND owner NOT IN ('PERFSTAT', 'PROGRAMMER', 'SYSADMIN', 'UTILITIES')
+   AND table_name NOT LIKE 'EXPORT%'
+   AND table_name NOT LIKE 'OLD_%'
+   AND table_name NOT LIKE 'SYS_IOT%'
+ ORDER BY num_rows DESC;
