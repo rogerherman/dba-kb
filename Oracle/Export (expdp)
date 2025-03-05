@@ -1,0 +1,13 @@
+-- Invokes the "expdp" tool for Oracle, beginning a database export.
+--    Version: v1
+--    Documentation:
+--       Corrupted blocks are populated when running the verify through RMAN.
+--    Usage:
+--       *. This is a command-line tool, to be used at the OS level that the database is running on.
+--       1. Change the "rogerherman" username at the beginning of the command to the privileged user you need to run the export as.
+--       2. The "schemas" section targets which schema you want to export. If you don't need a specific one, you can omit this clause.
+--       3. The "directory" section denotes where to store the export. For our organization, we created a custom "DB_EXPORT_DIR". You can change this to your custom directory as needed.
+--       4. The "dumpfile" section states what you want the export to be named. In this example, since we were exporting a single schema, we set the name to match for readability.
+--       5. The "logfile" section provides a log file for you to direct the debug message to. In this example, since this is a schema export, 
+
+expdp rogerherman@pd schemas=checksheets directory=DB_EXPORT_DIR dumpfile=checksheets.dmp logfile=expdp_checksheets.log consistent=y
