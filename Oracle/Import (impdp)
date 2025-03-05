@@ -1,0 +1,12 @@
+-- Runs the Oracle Import tool, impdp, with the specified parameters against a previously created database export.
+--    Current Version: v1
+--    Documentation:
+--       *. This is a command-line tool. You will need to execute it on the OS of the server that is hosting the database.
+--       1. In the example, "rogerherman" is used for the user to execute the tool as. You will want to change this to your privileged user that needs to run the tool.
+--       2. The "schemas" section denotes if there are any specific schemas being targeted for the import. Modify this as needed.
+--       3. The "directory" section indicates which database directory the exported files are in. For our organization, we configured the "DB_EXPORT_DIR". Change this to match your setup.
+--       4. The "dumpfile" section is where you list the names of the export files to process. In this example, we passed two export files in as an illustration. Modify to match your case.
+--    Warnings:
+--       1. Once you are done importing the schema, verify that all indexes, triggers, etc are valid. Otherwise, your system may be in a damaged state.
+
+impdp rogerherman@pd schemas=NORTRIDGE directory=DB_EXPORT_DIR dumpfile=EXPDAT_PL_20160905_040341_01.DMP,EXPDAT_PL_20160905_040341_02.DMP table_exists_action=replace
