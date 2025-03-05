@@ -1,0 +1,20 @@
+-- Kills all sessions running a specified SQL command.
+--    Current Version: v1
+--    Documentation:
+--       1. There are two "kill" commands included in the output of this query.
+--           a. "System_Kill" is intended to be run within a worksheet.
+--           b. "OraKill" invokes the command line utility. As such, it needs to be run directly on the server hosting the database.
+--       2. There is a control mechanism in this query to forcefully exclude any Oracle Maintained schemas. We don't want to accidentally kill a system process!
+--       3. The SQL ID provided at the end of the query is a sample. Modify this to suit your needs.
+--       4. The "username", "SID", and "SQL_ID" columns are included for sanity checking before you start killing sessions.
+
+SELECT s.username, s.sid, s.sql_id,
+       'ALTER SYSTEM KILL SESSION ''' || s.sid || ',' || s.serial# || ''';' AS system_kill, 
+       'ORAKILL ' || sys_context('USERENV', 'DB_NAME') || ' ' || p.spid AS orakill
+  FROM v$session s
+  JOIN v$process p ON (p.addr = s.paddr)
+ WHERE s.username NOT IN (SELECT u.username
+                            FROM dba_users u
+                           WHERE u.oracle_maintained = 'Y')
+   AND s.sql_id = '46ubcf6fhr9ns'
+ ORDER BY s.username, s.sid;
