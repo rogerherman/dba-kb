@@ -1,0 +1,18 @@
+-- Generates the commands needed to purge a specific object from the Shared Pool
+--    Current Version: v1
+--    Documentation:
+--       You can optionally provide the owner and object name, to target a specific item for removal.
+--       If these are not needed, that section can be removed or commented out.
+
+SELECT owner, name, type, timestamp, previous_timestamp,
+       'exec sys.dbms_shared_pool.purge(''' || owner || '.' || name || ''', ''' || 
+       CASE WHEN c.type IN ('FUNCTION', 'PACKAGE', 'PACKAGE BODY', 'PROCEDURE') THEN 'P'
+            WHEN c.type IN ('SEQUENCE') THEN 'Q'
+            WHEN c.type IN ('TRIGGER', 'TRIGGER BODY') THEN 'R'
+            WHEN c.type IN ('TYPE', 'TYPE BODY') THEN 'T'
+            ELSE ' ' END || ''');' AS purge_command
+  FROM v$db_object_cache c
+ WHERE (:p_Owner IS NULL OR owner = upper(:p_Owner))
+   AND (:p_ObjectName IS NULL OR name = upper(:p_ObjectName))
+   AND type IN ('FUNCTION', 'PACKAGE', 'PACKAGE BODY', 'PROCEDURE', 'SEQUENCE', 'TRIGGER', 'TRIGGER BODY', 'TYPE', 'TYPE BODY')
+ ORDER BY owner, name, type;
