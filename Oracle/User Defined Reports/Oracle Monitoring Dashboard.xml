@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<displays>
+<display id="67efc40b-0195-1000-8005-0a192cf1b230" type="" style="Chart" enable="true">
+	<name><![CDATA[Oracle Monitoring Dashboard]]></name>
+	<description><![CDATA[]]></description>
+	<tooltip><![CDATA[]]></tooltip>
+	<drillclass><![CDATA[]]></drillclass>
+	<CustomValues>
+		<PLOT_HGRID_WIDTH><![CDATA[THINNER]]></PLOT_HGRID_WIDTH>
+		<Y1AXIS_SCALE_INCREMENT><![CDATA[10.0]]></Y1AXIS_SCALE_INCREMENT>
+		<Y2AXIS_SCALE_MAXIMUM><![CDATA[80.0]]></Y2AXIS_SCALE_MAXIMUM>
+		<Y1AXIS_LINE_WIDTH><![CDATA[THINNEST]]></Y1AXIS_LINE_WIDTH>
+		<Y1AXIS_TITLE_ALIGNMENT><![CDATA[CENTER]]></Y1AXIS_TITLE_ALIGNMENT>
+		<LEGEND_LOCATION><![CDATA[AUTOMATIC]]></LEGEND_LOCATION>
+		<LEGEND_ALIGNMENT><![CDATA[LEFT]]></LEGEND_ALIGNMENT>
+		<XAXIS_LINE_WIDTH><![CDATA[THINNEST]]></XAXIS_LINE_WIDTH>
+		<DATA_MAP_COLUMNS><![CDATA[\,"LOG_TIME","LOG_TIME","LOG_TIME"]]></DATA_MAP_COLUMNS>
+		<Y1AXIS_SCALE_MAXIMUM><![CDATA[60.0]]></Y1AXIS_SCALE_MAXIMUM>
+		<XAXIS_TITLE_ALIGNMENT><![CDATA[CENTER]]></XAXIS_TITLE_ALIGNMENT>
+		<XAXIS_TICK_LABEL_ROTATE><![CDATA[HORIZONTAL]]></XAXIS_TICK_LABEL_ROTATE>
+		<Y1AXIS_LOGARITHMIC_BASE><![CDATA[BASE_10]]></Y1AXIS_LOGARITHMIC_BASE>
+		<TYPE><![CDATA[LINE_VERT_ABS]]></TYPE>
+		<GRID_WIDTH><![CDATA[THINNER]]></GRID_WIDTH>
+		<PLOT_DATALABELS_BAR_POSITION><![CDATA[ABOVE]]></PLOT_DATALABELS_BAR_POSITION>
+		<FOOTNOTE_ALIGNMENT><![CDATA[LEFT]]></FOOTNOTE_ALIGNMENT>
+		<XAXIS_TICK_LABEL_SKIP_MODE><![CDATA[AUTOMATIC]]></XAXIS_TICK_LABEL_SKIP_MODE>
+		<DATA_MAP_COLNAMES><![CDATA[\,"DOWN_THRESHOLD","LOG_TIME","METRIC_DESC","METRIC_UNIT","WARNING_THRESHOLD"]]></DATA_MAP_COLNAMES>
+		<DATA_MAP_SERIES><![CDATA[\,"METRIC_DESC",Warning Limit,Down Limit]]></DATA_MAP_SERIES>
+		<Y2AXIS_LOGARITHMIC_BASE><![CDATA[BASE_10]]></Y2AXIS_LOGARITHMIC_BASE>
+		<DATA_MAP_COUNT><![CDATA[3]]></DATA_MAP_COUNT>
+		<STYLE><![CDATA[Default]]></STYLE>
+		<TITLE_ALIGNMENT><![CDATA[LEFT]]></TITLE_ALIGNMENT>
+		<Y2AXIS_TICK_LABEL_ROTATE><![CDATA[HORIZONTAL]]></Y2AXIS_TICK_LABEL_ROTATE>
+		<Y2AXIS_SCALE_MINIMUM><![CDATA[10.0]]></Y2AXIS_SCALE_MINIMUM>
+		<Y2AXIS_LINE_WIDTH><![CDATA[THINNEST]]></Y2AXIS_LINE_WIDTH>
+		<DATA_MAP_VALUES><![CDATA[\,"METRIC_UNIT","WARNING_THRESHOLD","DOWN_THRESHOLD"]]></DATA_MAP_VALUES>
+		<Y1AXIS_TICK_LABEL_ROTATE><![CDATA[HORIZONTAL]]></Y1AXIS_TICK_LABEL_ROTATE>
+		<Y2AXIS_SCALE_INCREMENT><![CDATA[20.0]]></Y2AXIS_SCALE_INCREMENT>
+		<PLOT_VGRID_WIDTH><![CDATA[THINNER]]></PLOT_VGRID_WIDTH>
+		<Y2AXIS_TITLE_ALIGNMENT><![CDATA[CENTER]]></Y2AXIS_TITLE_ALIGNMENT>
+		<SUBTITLE_ALIGNMENT><![CDATA[LEFT]]></SUBTITLE_ALIGNMENT>
+	</CustomValues>
+	<query>
+		<sql><![CDATA[SELECT log_time, metric_unit, metric_desc, warning_threshold, down_threshold
+  FROM (SELECT al.log_time, al.metric_unit, al.metric_desc,
+               CASE WHEN s.warning_threshold = 0 THEN NULL ELSE s.warning_threshold END AS warning_threshold,
+               s.down_threshold,
+               ROW_NUMBER() OVER (ORDER BY al.log_time DESC) AS rnum 
+               -- "rnum" is used to force the selection to get the LAST 1000 records, since that is the limit for line graph points in SQL Developer.
+          FROM oracle_monitoring.alerts_log al
+          JOIN oracle_monitoring.sensors s
+            ON s.sensor_id = al.sensor_id
+         WHERE al.sensor_id = :p_SensorID
+           AND al.log_time >= trunc(sysdate - 7))
+ WHERE rnum <= 300
+ ORDER BY log_time]]></sql>
+		<binds>
+			<bind id="p_SensorID">
+				<prompt><![CDATA[p_SensorID]]></prompt>
+				<tooltip><![CDATA[p_SensorID]]></tooltip>
+				<value><![CDATA[24]]></value>
+				<bracket><![CDATA[null]]></bracket>
+			</bind>
+		</binds>
+	</query>
+	<display id="null" type="" style="Table" enable="true">
+		<name><![CDATA[Sensors]]></name>
+		<description><![CDATA[]]></description>
+		<tooltip><![CDATA[]]></tooltip>
+		<drillclass><![CDATA[]]></drillclass>
+		<CustomValues>
+			<TYPE><![CDATA[horizontal]]></TYPE>
+		</CustomValues>
+		<query>
+			<sql><![CDATA[SELECT s.sensor_id, s.sensor_desc
+  FROM oracle_monitoring.sensors s
+ ORDER BY s.sensor_id]]></sql>
+		</query>
+	</display>
+	<display id="null" type="" style="Table" enable="true">
+		<name><![CDATA[Raw Graph Data]]></name>
+		<description><![CDATA[]]></description>
+		<tooltip><![CDATA[]]></tooltip>
+		<drillclass><![CDATA[]]></drillclass>
+		<CustomValues>
+			<TYPE><![CDATA[horizontal]]></TYPE>
+		</CustomValues>
+		<query>
+			<sql><![CDATA[SELECT log_time, metric_unit, metric_desc, warning_threshold, down_threshold
+  FROM (SELECT al.log_time, al.metric_unit, al.metric_desc,
+               CASE WHEN s.warning_threshold = 0 THEN NULL ELSE s.warning_threshold END AS warning_threshold,
+               s.down_threshold,
+               ROW_NUMBER() OVER (ORDER BY al.log_time DESC) AS rnum 
+               -- "rnum" is used to force the selection to get the LAST 1000 records, since that is the limit for line graph points in SQL Developer.
+          FROM oracle_monitoring.alerts_log al
+          JOIN oracle_monitoring.sensors s
+            ON s.sensor_id = al.sensor_id
+         WHERE al.sensor_id = :p_SensorID
+           AND al.log_time >= trunc(sysdate - 7))
+ WHERE rnum <= 300
+ ORDER BY log_time]]></sql>
+		</query>
+	</display>
+</display>
+</displays>
