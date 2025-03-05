@@ -1,0 +1,16 @@
+-- Generates the DDL to enable/disable database-level triggers.
+--    Current Version: v1
+--    Documentation:
+--       This version of the query relies on the custom Sysadmin.Schemas table.
+--       A future version of this query could exclude Oracle managed schemas
+--       for largely the same effect. Programmer and Third Party flags are 
+--       consulted as well, but those could be ignored if not applicable to DB.
+
+SELECT CASE WHEN t.status = 'ENABLED' THEN 'Y' ELSE 'N' END AS is_enabled,
+       'ALTER TRIGGER ' || t.owner || '.' || t.trigger_name || ' DISABLE;' AS disable,
+       'ALTER TRIGGER ' || t.owner || '.' || t.trigger_name || ' COMPILE;' AS compile,
+       'ALTER TRIGGER ' || t.owner || '.' || t.trigger_name || ' ENABLE;' AS enable
+  FROM dba_triggers t
+ WHERE rtrim(t.base_object_type) = 'DATABASE'
+   AND t.owner NOT IN (SELECT u.username FROM dba_users u WHERE u.oracle_maintained = 'Y')
+ ORDER BY t.owner, t.trigger_name;
