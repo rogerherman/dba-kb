@@ -1,0 +1,9 @@
+-- Gets the DDL for the current profiles in Oracle.
+--    Current Version: v1
+--    Documentation:
+--       Useful for getting the DDL of all current profiles, so that they can either be archived or
+--       copied into another database system.
+
+SELECT profile, dbms_metadata.get_ddl('PROFILE', profile) as profile_ddl
+  FROM (SELECT UNIQUE profile FROM dba_profiles)
+ ORDER BY profile;
