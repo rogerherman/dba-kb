@@ -1,0 +1,15 @@
+-- Reports any indexes with stale stats and provides the DDL to regather statistics.
+--    Current Version: v1
+--    Documentation:
+--       This version of the query relies on the custom Sysadmin.Schemas table. A future version 
+--       of this query could be written to exclude Oracle managed schemas for the same effect.
+
+SELECT owner, table_name, index_name, num_rows, last_analyzed, global_stats, user_stats, stale_stats,
+       'EXEC dbms_stats.gather_index_stats(''' || owner || ''', ''' || index_name || ''');' AS gather_stats_ddl
+  FROM dba_ind_statistics
+ WHERE stale_stats = 'YES'
+   AND owner NOT IN (SELECT name FROM sysadmin.schemas WHERE built_in = 'Y' OR programmer = 'Y' OR third_party = 'Y')
+   AND owner NOT IN ('PERFSTAT', 'PROGRAMMER', 'SYSADMIN', 'UTILITIES')
+   AND table_name NOT LIKE 'EXPORT%'
+   AND table_name NOT LIKE 'OLD_%'
+ ORDER BY num_rows DESC;
