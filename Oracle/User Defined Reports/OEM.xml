@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<displays>
+<display id="b40103e8-0194-1000-8001-0a192cf11c30" type="" style="Chart" enable="true">
+	<name><![CDATA[OEM]]></name>
+	<description><![CDATA[]]></description>
+	<tooltip><![CDATA[]]></tooltip>
+	<drillclass><![CDATA[]]></drillclass>
+	<CustomValues>
+		<PLOT_HGRID_WIDTH><![CDATA[THINNER]]></PLOT_HGRID_WIDTH>
+		<Y1AXIS_SCALE_INCREMENT><![CDATA[10.0]]></Y1AXIS_SCALE_INCREMENT>
+		<Y2AXIS_SCALE_MAXIMUM><![CDATA[80.0]]></Y2AXIS_SCALE_MAXIMUM>
+		<Y1AXIS_LINE_WIDTH><![CDATA[THINNEST]]></Y1AXIS_LINE_WIDTH>
+		<Y1AXIS_TITLE_ALIGNMENT><![CDATA[CENTER]]></Y1AXIS_TITLE_ALIGNMENT>
+		<LEGEND_LOCATION><![CDATA[AUTOMATIC]]></LEGEND_LOCATION>
+		<LEGEND_ALIGNMENT><![CDATA[LEFT]]></LEGEND_ALIGNMENT>
+		<XAXIS_LINE_WIDTH><![CDATA[THINNEST]]></XAXIS_LINE_WIDTH>
+		<DATA_MAP_COLUMNS><![CDATA[\,"CPU_SPIKE_TIME","CPU_SPIKE_TIME"]]></DATA_MAP_COLUMNS>
+		<Y1AXIS_SCALE_MAXIMUM><![CDATA[80.0]]></Y1AXIS_SCALE_MAXIMUM>
+		<XAXIS_TITLE_ALIGNMENT><![CDATA[CENTER]]></XAXIS_TITLE_ALIGNMENT>
+		<XAXIS_TICK_LABEL_ROTATE><![CDATA[HORIZONTAL]]></XAXIS_TICK_LABEL_ROTATE>
+		<Y1AXIS_LOGARITHMIC_BASE><![CDATA[BASE_10]]></Y1AXIS_LOGARITHMIC_BASE>
+		<TYPE><![CDATA[LINE_VERT_ABS]]></TYPE>
+		<GRID_WIDTH><![CDATA[THINNER]]></GRID_WIDTH>
+		<FOOTNOTE_ALIGNMENT><![CDATA[LEFT]]></FOOTNOTE_ALIGNMENT>
+		<XAXIS_TICK_LABEL_SKIP_MODE><![CDATA[AUTOMATIC]]></XAXIS_TICK_LABEL_SKIP_MODE>
+		<DATA_MAP_COLNAMES><![CDATA[\,"CPU_COST","CPU_LIMIT","CPU_SPIKE_TIME"]]></DATA_MAP_COLNAMES>
+		<DATA_MAP_SERIES><![CDATA[\,Data,Limit]]></DATA_MAP_SERIES>
+		<Y2AXIS_LOGARITHMIC_BASE><![CDATA[BASE_10]]></Y2AXIS_LOGARITHMIC_BASE>
+		<DATA_MAP_COUNT><![CDATA[2]]></DATA_MAP_COUNT>
+		<STYLE><![CDATA[Default]]></STYLE>
+		<TITLE_ALIGNMENT><![CDATA[LEFT]]></TITLE_ALIGNMENT>
+		<Y2AXIS_TICK_LABEL_ROTATE><![CDATA[HORIZONTAL]]></Y2AXIS_TICK_LABEL_ROTATE>
+		<Y2AXIS_SCALE_MINIMUM><![CDATA[10.0]]></Y2AXIS_SCALE_MINIMUM>
+		<Y2AXIS_LINE_WIDTH><![CDATA[THINNEST]]></Y2AXIS_LINE_WIDTH>
+		<DATA_MAP_VALUES><![CDATA[\,"CPU_COST","CPU_LIMIT"]]></DATA_MAP_VALUES>
+		<Y1AXIS_TICK_LABEL_ROTATE><![CDATA[HORIZONTAL]]></Y1AXIS_TICK_LABEL_ROTATE>
+		<Y2AXIS_SCALE_INCREMENT><![CDATA[20.0]]></Y2AXIS_SCALE_INCREMENT>
+		<PLOT_VGRID_WIDTH><![CDATA[THINNER]]></PLOT_VGRID_WIDTH>
+		<Y2AXIS_TITLE_ALIGNMENT><![CDATA[CENTER]]></Y2AXIS_TITLE_ALIGNMENT>
+		<SUBTITLE_ALIGNMENT><![CDATA[LEFT]]></SUBTITLE_ALIGNMENT>
+	</CustomValues>
+	<query>
+		<sql><![CDATA[SELECT sample_time_desc AS cpu_spike_time, total_cost AS cpu_cost, cpu_limit--,
+       --cpu, bcpu, cpu_ora_wait, scheduler, uio, sio, concurrency, application, COMMIT, configuration, administrative, network, queueing, clust, other
+  FROM (SELECT sample_time_desc,
+               sample_time,
+               ROUND(cpu + bcpu + cpu_ora_wait + scheduler + uio + sio + concurrency + application + COMMIT + configuration + administrative + network + queueing + clust + other, 2) AS total_cost,
+               cpu, bcpu, cpu_ora_wait, scheduler, uio, sio, concurrency, application, COMMIT, configuration, administrative, network, queueing, clust, other,
+               (SELECT to_number(params.value) AS cpu_limit
+                  FROM v$parameter params
+                 WHERE params.name = 'cpu_count') AS cpu_limit,
+               CASE WHEN TRUNC(ROUND(cpu + bcpu + cpu_ora_wait + scheduler + uio + sio + concurrency + application + COMMIT + configuration + administrative + network + queueing + clust + other, 2))
+                            > (SELECT to_number(params.value) AS cpu_limit
+                                 FROM v$parameter params
+                                WHERE params.name = 'cpu_count') THEN 'Y' ELSE 'N' END AS exceeds_cpu_limit
+          FROM (SELECT to_char(sysmetric_history.sample_time, 'hh24:mi AM') AS sample_time_desc,
+                       ash.sample_time,
+                       nvl(cpu, 0)/60 AS cpu,
+                       nvl(bcpu, 0)/60 AS bcpu,
+                       DECODE(SIGN((nvl(cpu, 0) + nvl(bcpu, 0))/60 - nvl(cpu_ora_consumed, 0)), -1, 0, ((nvl(cpu, 0) + nvl(bcpu, 0))/60 - nvl(cpu_ora_consumed, 0))) AS cpu_ora_wait,
+                       nvl(scheduler, 0)/60 AS scheduler,
+                       nvl(uio, 0)/60 AS uio,
+                       nvl(sio, 0)/60 AS sio,
+                       nvl(concurrency, 0)/60 AS concurrency,
+                       nvl(application, 0)/60 AS application,
+                       nvl(COMMIT, 0)/60 AS COMMIT,
+                       nvl(configuration, 0)/60 AS configuration,
+                       nvl(administrative, 0)/60 AS administrative,
+                       nvl(network, 0)/60 AS network,
+                       nvl(queueing, 0)/60 AS queueing,
+                       nvl(clust, 0)/60 AS clust,
+                       nvl(other, 0)/60 AS other
+                  FROM (SELECT TRUNC(sample_time,'MI') AS sample_time,
+                               DECODE(session_state,'ON CPU',DECODE(session_type,'BACKGROUND','BCPU','ON CPU'), wait_class) AS wait_class
+                          FROM v$active_session_history
+                         WHERE sample_time>sysdate-INTERVAL '1' HOUR
+                           AND sample_time<=SYSDATE) ash
+                         PIVOT (COUNT(*) FOR wait_class IN ('ON CPU' AS cpu,
+                                                            'BCPU' AS bcpu,
+                                                            'Scheduler' AS scheduler,
+                                                            'User I/O' AS uio,
+                                                            'System I/O' AS sio,
+                                                            'Concurrency' AS concurrency,
+                                                            'Application' AS application,
+                                                            'Commit' AS COMMIT,
+                                                            'Configuration' AS configuration,
+                                                            'Administrative' AS administrative,
+                                                            'Network' AS network,
+                                                            'Queueing' AS queueing,
+                                                            'Cluster' AS clust,
+                                                            'Other' AS other)) ash,
+                       (SELECT TRUNC(begin_time,'MI') AS sample_time,
+                               VALUE/100 AS cpu_ora_consumed
+                          FROM v$sysmetric_history
+                         WHERE GROUP_ID=2
+                           AND metric_name='CPU Usage Per Sec') sysmetric_history
+                 WHERE ash.sample_time (+)= sysmetric_history.sample_time))
+ WHERE sample_time >= sysdate - 1/24 -- Last hour
+ ORDER BY sample_time]]></sql>
+	</query>
+	<display id="" type="" style="Table" enable="true">
+		<name><![CDATA[Top SQL]]></name>
+		<description><![CDATA[]]></description>
+		<tooltip><![CDATA[]]></tooltip>
+		<drillclass><![CDATA[]]></drillclass>
+		<CustomValues>
+			<TYPE><![CDATA[horizontal]]></TYPE>
+		</CustomValues>
+		<query>
+			<sql><![CDATA[SELECT total_wait, sql_id, programs, modules, clients, machines, sql_text
+  FROM oracle_monitoring.oem_topsql
+ ORDER BY total_wait DESC]]></sql>
+		</query>
+	</display>
+	<display id="" type="" style="Table" enable="true">
+		<name><![CDATA[Blocking Sessions]]></name>
+		<description><![CDATA[]]></description>
+		<tooltip><![CDATA[]]></tooltip>
+		<drillclass><![CDATA[]]></drillclass>
+		<CustomValues>
+			<TYPE><![CDATA[horizontal]]></TYPE>
+		</CustomValues>
+		<query>
+			<sql><![CDATA[SELECT username, sid, serial#, blocking_sid, machine, sql_id, prev_sql_id, wait_class, wait_event, seconds_in_wait, logon_time, session_kill, ora_kill
+  FROM oracle_monitoring.view_blockingsessions]]></sql>
+		</query>
+	</display>
+	<display id="" type="" style="Table" enable="true">
+		<name><![CDATA[CPU Spikes]]></name>
+		<description><![CDATA[]]></description>
+		<tooltip><![CDATA[]]></tooltip>
+		<drillclass><![CDATA[]]></drillclass>
+		<CustomValues>
+			<TYPE><![CDATA[horizontal]]></TYPE>
+		</CustomValues>
+		<query>
+			<sql><![CDATA[SELECT cpu_spike_time, cpu_cost, cpu_limit
+  FROM oracle_monitoring.oem_topactivity_lasthour
+ ORDER BY cpu_spike_time DESC]]></sql>
+		</query>
+	</display>
+	<display id="" type="" style="Table" enable="true">
+		<name><![CDATA[AWR Reports]]></name>
+		<description><![CDATA[]]></description>
+		<tooltip><![CDATA[]]></tooltip>
+		<drillclass><![CDATA[]]></drillclass>
+		<CustomValues>
+			<TYPE><![CDATA[horizontal]]></TYPE>
+		</CustomValues>
+		<query>
+			<sql><![CDATA[SELECT *
+  FROM oracle_monitoring.oem_awr_report_info]]></sql>
+		</query>
+	</display>
+</display>
+</displays>
