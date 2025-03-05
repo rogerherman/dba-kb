@@ -1,0 +1,9 @@
+-- Gets the current DDL for all tablespaces in Oracle.
+--    Current Version: v1
+--    Documentation:
+--       Generates the DDL for the tablespaces in Oracle. This is useful for versioning, as well as
+--       copying the structure into a separate database.
+
+SELECT t.tablespace_name, dbms_metadata.get_ddl('TABLESPACE', t.tablespace_name)
+  FROM (SELECT tablespace_name FROM dba_tablespaces) t
+ ORDER BY t.tablespace_name;
