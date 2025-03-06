@@ -1,0 +1,40 @@
+-- Guides through the process of dropping and recreating a log file group, so that the size can be increased.
+--    Current Version: v1
+--    Documentation:
+--       This version of the query relies on the custom Sysadmin.Schemas table. A future version 
+--       of this query could be written to exclude Oracle managed schemas for the same effect.
+
+-- Supporting Query: Report log file groups and their status
+SELECT group#, status
+  FROM v$log
+ ORDER BY group#;
+
+-- Step 1: Remove the log file group you want to resize.
+--       WARNING: Make sure it's not CURRENT or ACTIVE! Can use the above supporting query to verify status.
+alter database drop logfile group <GROUP#>;
+
+-- Step 2: Delete the files on disk.
+--       This is especially important if you plan on reusing the directory and file names afterwards.
+--       Also better to do so, so that space is not needlessly being consumed.
+
+-- Step 3: Add the new log file group and member(s)
+--       The first command handles adding a new log file group to the database.
+--            The "<GROUP#>" placeholder needs to be updated with your desired log file group #.
+--            The size on the end of the command is provided as an example. Change the "4096M" size as needed.
+--       The second command handles adding a multiplexed log file to the group.
+--            This helps add additional members onto separate drives/folders to provide resilience.
+--            This command can be run as many times as needed, assuming that the 
+--                  "<OTHER_PATH_TO_LOG_FILE>" placeholder changes with it.
+alter database add logfile group <GROUP#> '<PATH_TO_LOG_FILE.log>' size 4096M;
+alter database add logfile member '<OTHER_PATH_TO_LOG_FILE.log>' to group <GROUP#>;
+
+-- Step 4: Switch through the log groups, to ensure that there are no issues.
+--       As a sanity check, you will want to switch through the active log file groups, so that
+--            you can verify that the database can utilize your new log file group correctly. Otherwise,
+--            you could have a database issue at an indeterminate time.
+--       WARNING: Don't cycle through the log file groups too quickly, or you could cause a separate
+--            issue, where there's no remaining log file groups to switch to while they're being
+--            archived. Check the status of the log file groups as you cycle through. If it is
+--            still being archived, the status will be "ACTIVE". Wait for all statuses to either be
+--            "CURRENT" or "INACTIVE" before switching again.
+alter system switch logfile;
