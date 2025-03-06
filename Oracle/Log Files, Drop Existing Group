@@ -1,0 +1,7 @@
+-- Drops an existing log file group.
+--    Current Version: v1
+--    Documentation:
+--       The GROUP# placeholder will need to be adjusted to the log file group # that you want removed.
+--       You will want to ensure that the log file group is not CURRENT or ACTIVE before removing it!
+
+alter database drop logfile group <GROUP#>;
