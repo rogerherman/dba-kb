@@ -1,0 +1,15 @@
+-- Lists basic log file group information.
+--    Current Version: v1
+--    Documentation:
+--       This is a brief summary of the log file configuration for the database. It reports:
+--            Group #
+--            Status
+--            Member (ie: file location)
+--            Size (calculation shows this in MBs)
+
+SELECT l.group#, l.status, lf.member,
+       ROUND(l.bytes/1024/1024, 2) AS size_mb
+  FROM v$log l
+  JOIN v$logfile lf
+    ON lf.group# = l.group#
+ ORDER BY l.group#, member;
