@@ -1,0 +1,12 @@
+-- Adds a new group to the log files.
+--    Current Version: v1
+--    Documentation:
+--       1. The PATH_TO_LOG_FILE placeholder will need to come form your environment.
+--              a. In example, D:\Oracle\RedoLogs\REDO_01.log
+--       2. The extension for the file is arbitrary. My organization chose to use ".log", so that
+--              we can easily tell that it is a log file when viewing the file in the OS.
+--       3. The GROUP# placeholder will need to be overwritten with the log file group # that you
+--              want to add the new log file to.
+--       4. The "4096M" size is provided as an example. Adjust this to match your needs.
+
+alter database add logfile group <GROUP#> '<PATH_TO_LOG_FILE>.log' size 4096M;
