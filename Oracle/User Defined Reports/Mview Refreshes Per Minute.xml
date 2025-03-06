@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<displays>
+<display id="6c3d5a68-0195-1000-8015-0a192cf1b230" type="" style="Chart" enable="true">
+	<name><![CDATA[Mview Refreshes Per Minute]]></name>
+	<description><![CDATA[]]></description>
+	<tooltip><![CDATA[]]></tooltip>
+	<drillclass><![CDATA[]]></drillclass>
+	<CustomValues>
+		<PLOT_HGRID_WIDTH><![CDATA[THINNER]]></PLOT_HGRID_WIDTH>
+		<Y1AXIS_SCALE_INCREMENT><![CDATA[10.0]]></Y1AXIS_SCALE_INCREMENT>
+		<Y2AXIS_SCALE_MAXIMUM><![CDATA[80.0]]></Y2AXIS_SCALE_MAXIMUM>
+		<Y1AXIS_LINE_WIDTH><![CDATA[THINNEST]]></Y1AXIS_LINE_WIDTH>
+		<Y1AXIS_TITLE_ALIGNMENT><![CDATA[CENTER]]></Y1AXIS_TITLE_ALIGNMENT>
+		<LEGEND_LOCATION><![CDATA[AUTOMATIC]]></LEGEND_LOCATION>
+		<LEGEND_ALIGNMENT><![CDATA[LEFT]]></LEGEND_ALIGNMENT>
+		<XAXIS_LINE_WIDTH><![CDATA[THINNEST]]></XAXIS_LINE_WIDTH>
+		<DATA_MAP_COLUMNS><![CDATA[\,"TIME"]]></DATA_MAP_COLUMNS>
+		<Y1AXIS_SCALE_MAXIMUM><![CDATA[80.0]]></Y1AXIS_SCALE_MAXIMUM>
+		<XAXIS_TITLE_ALIGNMENT><![CDATA[CENTER]]></XAXIS_TITLE_ALIGNMENT>
+		<XAXIS_TICK_LABEL_ROTATE><![CDATA[HORIZONTAL]]></XAXIS_TICK_LABEL_ROTATE>
+		<Y1AXIS_LOGARITHMIC_BASE><![CDATA[BASE_10]]></Y1AXIS_LOGARITHMIC_BASE>
+		<TYPE><![CDATA[LINE_VERT_ABS]]></TYPE>
+		<GRID_WIDTH><![CDATA[THINNER]]></GRID_WIDTH>
+		<FOOTNOTE_ALIGNMENT><![CDATA[LEFT]]></FOOTNOTE_ALIGNMENT>
+		<XAXIS_TICK_LABEL_SKIP_MODE><![CDATA[AUTOMATIC]]></XAXIS_TICK_LABEL_SKIP_MODE>
+		<DATA_MAP_COLNAMES><![CDATA[\,"MVIEW_REFRESHES","TIME"]]></DATA_MAP_COLNAMES>
+		<DATA_MAP_SERIES><![CDATA[\,Mview Refreshes]]></DATA_MAP_SERIES>
+		<Y2AXIS_LOGARITHMIC_BASE><![CDATA[BASE_10]]></Y2AXIS_LOGARITHMIC_BASE>
+		<STYLE><![CDATA[Default]]></STYLE>
+		<TITLE_ALIGNMENT><![CDATA[LEFT]]></TITLE_ALIGNMENT>
+		<Y2AXIS_TICK_LABEL_ROTATE><![CDATA[HORIZONTAL]]></Y2AXIS_TICK_LABEL_ROTATE>
+		<Y2AXIS_SCALE_MINIMUM><![CDATA[10.0]]></Y2AXIS_SCALE_MINIMUM>
+		<Y2AXIS_LINE_WIDTH><![CDATA[THINNEST]]></Y2AXIS_LINE_WIDTH>
+		<DATA_MAP_VALUES><![CDATA[\,"MVIEW_REFRESHES"]]></DATA_MAP_VALUES>
+		<Y1AXIS_TICK_LABEL_ROTATE><![CDATA[HORIZONTAL]]></Y1AXIS_TICK_LABEL_ROTATE>
+		<Y2AXIS_SCALE_INCREMENT><![CDATA[20.0]]></Y2AXIS_SCALE_INCREMENT>
+		<PLOT_VGRID_WIDTH><![CDATA[THINNER]]></PLOT_VGRID_WIDTH>
+		<Y2AXIS_TITLE_ALIGNMENT><![CDATA[CENTER]]></Y2AXIS_TITLE_ALIGNMENT>
+		<SUBTITLE_ALIGNMENT><![CDATA[LEFT]]></SUBTITLE_ALIGNMENT>
+	</CustomValues>
+	<query>
+		<sql><![CDATA[WITH
+  yesterdays_time AS (
+      SELECT to_char(trunc(sysdate - 1) + 1/24/60 * (column_value - 1), 'mm-dd-yyyy hh24:mi') AS time
+        FROM utilities.integers(1440)
+    ),
+  todays_time AS (
+      SELECT to_char(time_t, 'mm-dd-yyyy hh24:mi') AS time
+        FROM (SELECT trunc(sysdate) + 1/24/60 * (column_value - 1) AS time_t
+                FROM utilities.integers(1440))
+       WHERE time_t <= sysdate
+    ),
+  mview_log_refreshes AS (
+      SELECT TO_CHAR(jrd.log_date, 'mm-dd-yyyy hh24:mi') AS time,
+             COUNT(*) AS num_refreshes
+        FROM dba_scheduler_job_run_details jrd
+       WHERE (jrd.owner, jrd.job_name) IN (SELECT r.rowner, r.job_name FROM dba_refresh r)
+       GROUP BY TO_CHAR(jrd.log_date, 'mm-dd-yyyy hh24:mi')
+    )
+SELECT time, mview_refreshes
+  FROM (SELECT t.time, NVL(mlr.num_refreshes, 0) AS mview_refreshes,
+               ROW_NUMBER() OVER (ORDER BY t.time DESC) AS rnum
+          FROM (SELECT time
+                  FROM todays_time
+                 UNION ALL
+                SELECT time
+                  FROM yesterdays_time) t
+          LEFT JOIN mview_log_refreshes mlr
+            ON mlr.time = t.time)
+ WHERE rnum <= 999 -- This is to limit our result set to the last 1000 rows. SQL Developer only graphs that many by default.
+ ORDER BY time]]></sql>
+	</query>
+</display>
+</displays>
