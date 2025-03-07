@@ -1,0 +1,46 @@
+-- Adds a new user to the database.
+--    Version: v1
+--    Documentation:
+--       The following process is listed to act as a guide, not gospel. These are merely the steps
+--       that I've chosen to follow, so that there is a repeatable, governing process for user creation.
+
+-- ##   USERNAME   ##
+-- First, unless you are directed to create a specific user, you need to decide on the user name.
+--     In general, we want to avoid using needless prefixing (ie: "ABC_") unless it falls
+--     into one of the below cases:
+--         a. The user belongs to a third-party company/entity.
+--             (ie: ABC_JSMITH, from consulting firm ABC)
+--         b. The user is a "stub" user from another database ecosystem, to direct cross-DB traffic.
+--             (ie: XYZ_FINANCIALS, where XYZ is a corporate unit; not just a singular DB)
+
+-- ##   TABLESPACE   ##
+-- Next, the user will need a default tablespace for their objects to be stored in.
+--     a. If the user is for a PERSON, set their default tablespace as the USERS tablespace.
+--     b. Otherwise, create a new tablespace for the user, so that they have a dedicated tablespace.
+
+-- ##   PROFILE   ##
+-- Thirdly, we need to consider the default profile that will be assigned to the user.
+--     This will be different for each database ecosystem and may have been configured in advance.
+--     In general, we use broad categories to help govern user profiles that fall into the following list:
+--         a. DEFAULT - This is the default. Should not be used for new/custom users without good reason.
+--         b. PERSON - This is a custom profile. We apply this profile to human beings (ie: not websites, etc).
+--         c. WEBSITE - This is a custom profile, intended for website use.
+--         *. There can be others that your database environment already has configured. Review the list
+--             and see if there are any available options that make sense for your new user.
+
+-- ##   SECURITY   ##
+-- Finally, we need to set the new user's password. There are a few rules to follow here:
+--     a. Our organization requires at least three of the basic password character types to be used in any
+--         database passwords (upper case, lower case, numbers, symbols).
+--     b. If the user being created is for a PERSON, it is safe to set the password to either a default
+--         or single-use password, since they will be changing it upon receipt. Make sure to notify the
+--         user about their credentials through a secure/encrypted channel.
+--     c. If the user being created is NOT a PERSON (ie: more like a stub or service account), you will
+--         want to ensure that the password does not match between all forms of the database. This
+--         includes dev, test, prod, etc. If said service account password were to be leaked, we want to
+--         minimize the attack vector as much as possible.
+
+-- Once all of these considerations and pieces of information have been gathered, you can create the user.
+CREATE USER <username> IDENTIFIED BY <password> DEFAULT TABLESPACE <tablespace_name> PROFILE <profile_name>;
+ALTER USER <username> GRANT QUOTA UNLIMITED ON <tablespace_name>;
+GRANT CONNECT, RESOURCE TO <username>;
