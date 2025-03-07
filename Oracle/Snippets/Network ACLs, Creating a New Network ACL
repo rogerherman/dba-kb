@@ -1,5 +1,5 @@
 -- Creates a new network ACL for database to service connectivity.
---    Version: v1
+--    Version: v2
 --    Documentation:
 --       Network ACLs were required starting in Oracle 11g. Network ACLs need to be created to manage
 --       access from the database to external services.
