@@ -1,0 +1,62 @@
+Average Downtime: 4-6 hours
+
+-- ##   Downloading the Patch Set from Oracle Support   ##
+-- 1. Log into https://support.oracle.com
+-- 2. Click on the "Patches & Updates" tab in the top-left.
+-- 3. In the "Patch Search" subsection, click on "Product or Family (Advanced)"
+-- 4. In the "Product" field, select the "Oracle Database - Enterprise Edition" option.
+-- 5. In the "Release" field, select all the available "Oracle Database" options that match your desired release version (ie: 19.xx for 19c)
+-- 6. Since our organization currently uses Windows for the OS, select the platform choice of "Microsoft Windows x64 (64-bit)".
+-- 7. Once all of your filters have been set, click "Save" to create a named filter option for the future.
+--     a. Recommended to match the desired release. (ie: "19c CPUs" vs "23c CPUs")
+-- 8. With the search criteria saved, navigate to the "Saved Searches" tab in the "Patch Search" subsection. Your saved search should now be in this list.
+-- 9. Click on the saved search link (ie: 19c CPUs), and hit search on the pop-up window that appears.
+--     a. NOTE: The search page may take several minutes to load.
+-- WARNING: Once the search page loads, DO NOT CLICK ON THE LINK for the patch name! This often causes the site to timeout on our network.
+--     Click on the row of the patch that you are interested in downloading. A pop-up will appear with additional options. Select the download option.
+
+-- ##   Deploying the Downloaded Patch Set to Our Oracle Servers   ##
+-- 1. Connect to the server you want to deploy the Oracle patch set onto.
+-- 2. Navigate to the following location on the server:  L:\Oracle\Software
+-- 3. Copy the zip folder from your download location to the local server's L drive.
+-- 4. Unzip the folder on the server.
+
+-- ##   Before Installing the Patch Set   ##
+-- 1. Get approvals from the Solutions Team Leaders and Change Advisory Board to proceed with the patch installation.
+--     a. You should recommend a date and time when requesting approval.
+-- 2. Verify that the ORACLE_HOME environment variable is pointed to your expected, current Oracle Home.
+-- 3. Verify that the required minimum version of OPATCH is present in the system. If not, update OPATCH as well.
+
+-- ##   Installing the Patch Set - (First Phase: Database Offline)   ##
+-- 1. Disable any database-level triggers on the database.
+-- 2. Shut down the database and listener.
+-- 3. Explicitly stop the Distributed Transaction Coordinator service:
+--     a. CMD> net stop msdtc
+-- 4. Copy the extracted patch to the C drive
+--     a. C:\Oracle\<copy patch set here>
+-- 5. Open a command prompt window in the patch set folder as ADMINISTRATOR
+--     a. CMD> cd C:\Oracle\<patch set number>
+-- 6. Apply the patch to the database
+--     a. CMD> opatch apply
+
+-- ##   Installing the Patch Set - (Second Phase: Database Online)   ##
+-- 1. Once the patch set has been applied, start the database back up.
+--     a. CMD> sqlplus rogerherman as sysdba
+--     b. SQL> startup
+--     c. If the database starts up without issue, you can close this session/window.
+-- 2. Once the database has started up, finalize the patch installation as ADMINISTRATOR
+--     a. CMD> %ORACLE_HOME%/OPatch
+--     b. CMD> datapatch verbose
+-- 3. Once the datapatch completes, check for any invalid objects and recompile them.
+
+-- ##   After Installing the Patch Set   ##
+-- 1. Enable any previously disabled database-level triggers.
+-- 2. Delete the unzipped patch set folder from C:\Oracle, since it will no longer be needed.
+-- 3. Wait at least one week, monitoring for any atypical behaviors or errors.
+
+-- ##   Deinstalling the Patch Set   ##
+-- 1. Shut down the database and listener.
+-- 2. Rollback the patch
+--     a. CMD> opatch rollback -id <patch_id>
+--     b. ie: opatch rollback -id 35681552
+-- 3. Start the database back up.
