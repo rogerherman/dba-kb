@@ -1,0 +1,16 @@
+-- ##   Pre-Requisites   ##
+You need to have SYSDBA privileges for the database.
+
+-- ##   Shutting Down a Database for Maintenance (Windows)   ##
+-- 1. RDP into the server
+-- 2. Connect to the database as SYSDBA
+-- 3. Issue the SHUTDOWN IMMEDIATE command
+-- 4. Wait for the database instance to fully close.
+-- 5. Turn off the Oracle Windows services (listed below) and change them to start up manually.
+--     *. We set them to manually start, so that they are not automatically started if the maintenance
+--           requires a reboot of the server.
+--     a. OracleService<SID>
+--     b. OracleVssWriter<SID>
+--     c. OracleOraDB19Home1TNSListener
+--     d. OracleJobScheduler<SID>
+--     e. Oracleagent13c1Agent
