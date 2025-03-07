@@ -1,0 +1,17 @@
+-- Drops a tablespace from the database.
+--    Current Version: v1
+--    Documentation:
+--        BE CERTAIN that you want to drop the tablespace and all of its contents!
+--        You will need to replace the <TABLESPACE_NAME> tag with your tablespace name as needed.
+
+-- Check to see if the tablespace is empty.
+SELECT s.owner, s.segment_name 
+  FROM dba_segments s
+ WHERE s.tablespace_name = '<TABLESPACE_NAME>'
+ ORDER BY s.owner, s.segment_name;
+
+-- If the tablespace is empty, we can proceed with dropping it.
+--     Otherwise, you need to ensure that it is fine for the associated objects to disappear as well.
+
+-- Once the tablespace is empty or approvals are in place, drop the tablespace.
+DROP TABLESPACE <TABLESPACE_NAME> INCLUDING CONTENTS AND DATAFILES;
