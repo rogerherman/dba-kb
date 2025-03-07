@@ -42,3 +42,9 @@ BEGIN
   );
 END;
 /
+
+-- ##   VERIFY ACL APPLIED TO DATABASE USER   ##
+-- You can verify that the new Network ACL has been applied to the database user through this query.
+SELECT *
+  FROM dba_network_acl_privileges nap
+ ORDER BY nap.acl, nap.principal, nap.privilege;
