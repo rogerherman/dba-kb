@@ -1,0 +1,26 @@
+-- Adds an additional service to an existing Network ACL, expanding its covered service list.
+--    Version: v1
+--    Documentation:
+--       Adding an additional service to an existing Network ACL does not require a database restart, etc.
+--       You should have connectivity in all new sessions for the supported users and services going forward.
+
+-- First, ensure that the Network ACL already exists.
+SELECT *
+  FROM dba_network_acls na
+ ORDER BY na.acl, na.host;
+
+-- Next, add the additional service host to the Network ACL.
+BEGIN
+  dbms_network_acl_admin.assign_acl(
+    acl        => '<ACL_FILENAME>.xml',
+    host       => '<ACL_HOST>',
+    lower_port => NULL,
+    upper_port => NULL
+  );
+END;
+/
+
+-- Finally, verify that the Network ACL now lists the additional service host.
+SELECT *
+  FROM dba_network_acls na
+ ORDER BY na.acl, na.host;
