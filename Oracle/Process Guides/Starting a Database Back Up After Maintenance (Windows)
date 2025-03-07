@@ -1,0 +1,18 @@
+-- ##   Pre-Requisites   ##
+You need to have SYSDBA privileges for the database.
+
+-- ##   Starting the Database Up After Maintenance (Windows)   ##
+-- 1. Remote into the server
+-- 2. Launch the "Services" control.
+-- 3. Start the Oracle services again (order listed below), changing them back from manual startup to automatic.
+--     *. Depending on how you have configured your Oracle services, the instance may also come back online when the Windows services start.
+--     a. OracleService<SID>
+--     b. OracleVssWriter<SID>
+--     c. OracleOraDB19Home1TNSListener
+--     d. OracleJobScheduler<SID>
+--     e. Oracleagent<..>Agent
+-- 4. Once all services are back online, verify that you can connect to the database remotely.
+
+-- ##   What To Do if the Database Doesn't Start Up   ##
+-- Immediately contact the primary and senior DBAs. State what the error is and which database you are 
+--     having trouble starting. Provide any additional steps that you have taken to troubleshoot the issue.
