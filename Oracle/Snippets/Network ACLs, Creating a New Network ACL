@@ -1,0 +1,44 @@
+-- Creates a new network ACL for database to service connectivity.
+--    Version: v1
+--    Documentation:
+--       Network ACLs were required starting in Oracle 11g. Network ACLs need to be created to manage
+--       access from the database to external services.
+
+-- ##   CREATE NEW ACL LIST   ##
+-- To allow connectivity to remote services, you will need to first create an Oracle Network ACL.
+--     These control lists are then applied to the specific database users that need them, instead
+--     of the whole database.
+-- The file name can be used to better describe the ACLs usage, since it does not programmatically matter.
+-- The ACL description field allows for further info to be added, since ACLs are often created and forgotten.
+-- The "DB_USER_FOR_ACCESS" placeholder is the specific database user that needs to connect to the 
+--     services that this ACL will cover.
+BEGIN
+  dbms_network_acl_admin.create_acl(
+    acl         => '<ACL_FILENAME>.xml',
+    description => '<ACL_DESCRIPTION>',
+    principal   => '<DB_USER_FOR_ACCESS>',
+    is_grant    => TRUE,
+    privilege   => 'connect, resolve'
+  );
+END;
+/
+
+-- ##   ASSIGN ACL TO HOST   ##
+-- Once the network ACL list has been created, you will need to assign host services or domains to it.
+--     ie: portal.azure.com
+-- The host parameter does support the "*" wildcard for portions of the domain.
+--     ie: *.azure.com
+--     IMPORTANT: While just passing "*" is valid, that means your ACL will evaluate to TRUE for ALL
+--         requested services and connections. This heavily violates security and privilege principles.
+--         Strongly urged to not use it, even in testing.
+--  The lower and upper port parameters allow you to fine tune the host access, so that only specific
+--      ports are allowed. In this example, we have provided NULL; the most common case.
+BEGIN
+  dbms_network_acl_admin.assign_acl(
+    acl        => '<ACL_FILENAME>.xml',
+    host       => '<ACL_HOST>',
+    lower_port => NULL,
+    upper_port => NULL
+  );
+END;
+/
