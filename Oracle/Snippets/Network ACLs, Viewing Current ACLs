@@ -1,8 +1,14 @@
 -- Lists all current network ACLs for the database.
---    Version: v1
+--    Version: v2
 --    Documentation:
 --       Network ACLs were required starting with Oracle 11g to talk to any remote service.
 
+-- Show all created Network ACLs
 SELECT *
   FROM dba_network_acls na
  ORDER BY na.acl, na.host;
+
+-- Show a list of database users that these lists are applied to.
+SELECT *
+  FROM dba_network_acl_privileges nap
+ ORDER BY nap.acl, nap.principal, nap.privilege;
