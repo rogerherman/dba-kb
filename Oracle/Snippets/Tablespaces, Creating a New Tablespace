@@ -1,0 +1,40 @@
+-- Creates a new tablespace in the database.
+--    Current Version: v1
+--    Documentation:
+--       Creates a new tablespace in the database for object storage. There are several pieces of 
+--       information that are needed for this command, so you will want to refer to the dedicated
+--       sections below for more details. Also note that this is a process guide and not to be taken
+--       as gospel. We have chosen to use this system as a repeatable, governing process to organize
+--       new tablespace creation.
+
+-- ##   TABLESPACE NAME   ##
+-- In general, we either want our tablespace names to directly map to a database username, making it
+--     making it their dedicated object space, or to a sub-system specific case (ie: user uploaded photos).
+--         ie: "academic"
+
+-- ##   DATAFILE PATH   ##
+-- Our datafiles should be grouped into the same folder location, for ease of reference.
+--     Note that SID is the database's SID. More than likely, this subfolder already exists from when the
+--     database was created.
+--         ie: E:\oracle\oradata\<SID>\
+
+-- ##   DATAFILE NAME   ##
+-- The datafile name should match the tablespace that it belongs to, along with a unique file sequence
+--     number. Also, upper and lower case for file names is a preference. We've opted to use lower in
+--     this example.
+--         ie: "academic01.dbf"
+
+-- ##   SIZE   ##
+-- The datafile size should use the following growth pattern, unless a large initial load is expected.
+--     (Start 250 MB -> 4 GBs -> 10 GBs Final)
+--     If you need more space beyond 10 GBs for any tablespace, we are instead creating an additional
+--     datafile with more space allocated. That way, our datafiles are in manageable, consist "chunks"
+--     for the RMAN backups.
+--     Also, this isn't to say that your starting size cannot be 10 GBs if you anticipate needing that
+--     much. We are trying to avoid having "stub" users with 10 GBs of space allocated that will never
+--     create objects, thus wasting hard drive space.
+--         ie: 250m
+
+-- Once the above details have been gathered, you can create the new tablespace.
+CREATE TABLESPACE <tablespace_name> DATAFILE <datafile_name> SIZE <datafile_size>;
+-- Example: CREATE TABLESPACE academic DATAFILE 'E:\oracle\oradata\PD\academic01.dbf' SIZE 250m;
