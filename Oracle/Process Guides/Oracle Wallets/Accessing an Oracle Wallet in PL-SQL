@@ -1,0 +1,7 @@
+You can access an Oracle Wallet in PL/SQL for certain secure operations. 
+An example of this would be to make HTTPS web requests.
+
+utl_http.set_wallet(
+    path     => '<DIRECTORY_PATH_TO_WALLET>',
+    password => '<PASSWORD_FOR_WALLET>'
+);
