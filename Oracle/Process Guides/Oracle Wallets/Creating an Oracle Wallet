@@ -1,0 +1,12 @@
+1. Log into the server that you want to create the Oracle Wallet in.
+2. Launch the Oracle Wallet Manager (part of the Oracle client folder).
+    a. Example path in the Start Menu ("Oracle - OraDB19Home1" -> "Wallet Manager")
+3. In the Wallet Manager, use the top menu and select "Wallet" -> "New".
+4. If you receive an error stating that the default wallet directory does not exist, you can ignore it.
+5. The "New Wallet" popup will help guide the next step:
+    a. Generate a new password for the wallet. Provide it here.
+    b. For the wallet type, "Standard" is fine.
+6. You may receive a prompt asking about certificate requests. Skip this for now.
+7. The wallet has been successfully created, but not saved. Save the wallet to our custom default directory in its own subfolder.
+    a. ie: C:\Oracle\Wallets\LDAP
+    b. ie: C:\Oracle\Wallets\Graph API
