@@ -1,0 +1,34 @@
+Generally, the DBA does not handle this part. We are, however, storing the instructions here to be
+thorough and in the event that the programming teams needs to recall how this is done.
+
+1. Visit the URL for the endpoint you intend to call from the database
+2. Immediately left of the URL bar, find and click on the lock icon
+3. If using Chrome browser...
+    a. Navigate through "Connection is secure" -> "Certificate is valid"
+4. If using Edge browser...
+    a. Click on "Connection is secure"
+    b. Find and click on the tiny certificate icon along the top right edge of the popup area (just left of the "X" icon)
+5. In the popup window that appears, click the "Details" tab
+6. Select the item at the very top of the Certificate Hierarchy section--this is the root cert
+7. Click "Export" at the bottom of the popup
+    a. If your browser is configured to ask you where to save downloaded items…
+        i. Leave the cert with its existing/pre-generated name or change it to something meaningful
+        ii. Make sure the name includes ".crt" as the file extension at the very end of the filename
+            *. If this is not present, the certificate will not download as a certificate file and, while Oracle will allow it to be installed in the Wallet, Oracle will not be able to validate the certificate and requests involving it cannot be made
+        iii. Click "Save" to download the cert
+8. If using Firefox...
+    a. Visit the URL for the endpoint you intend to call from the database
+    b. Immediately left of the URL bar, find and click on the lock icon
+    c. Navigate "Connection is secure" -> "More information"
+    d. In the new window that appears, click the "View Certificate" button
+    e. After the new tab opens…
+        i. Select the certificate that is farthest right in top navigation bar OR...
+        ii. Select the certificate with "Root CA" or something similar in its name
+    f. Scroll down the page to the Miscellaneous section
+    g. Click the link next to "Download"--make sure to click the link with "(cert)" at the end of it, not "(chain)"
+    h. If your browser is configured to ask you where to save downloaded items…
+        i. Leave the cert with its existing/pre-generated name or change it to something meaningful
+        ii. Make sure the name includes ".crt" as the file extension at the very end of the filename
+            *. If this is not present, the certificate will not download as a certificate file and, while Oracle will allow it to be installed in the Wallet, Oracle will not be able to validate the certificate and requests involving it cannot be made
+            **. A potentially workable caveat is if the file extension name is ".pem"--using this type of cert file has not been tested yet, but may still be valid
+        iii. Click "Save" to download the cert
