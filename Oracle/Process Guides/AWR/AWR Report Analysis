@@ -1,0 +1,17 @@
+In general, apply the "Oracle Diagnostic" method:
+1. Find the worst bottleneck.
+2. Relieve it.
+3. Repeat until performance is good enough.
+
+Master Checklist
+1. Implement any ADDM findings from the same snapshot interval.
+2. Review overall picture from AWR header information.
+3. Check Host and Instance CPU to determine proportion of CPU usage by the instance.
+4. Check the Load Profile to use later as context for the Top Waits.
+5. Examine the Top 5 Timed Events for highest resource consumption
+
+Check for Serious CPU Over-Provisioning
+1. Check the "Host CPU" section. Verify that the "%Idle" value is not near zero. 
+    a. (0% is completely starved, 100% is no work being done.)
+2. Check the "Load Profile" section. Verify that the "DB CPU(s)" value does not exceed the number of cores for the server.
+    a. If reported DB CPU(s) is 22, but you only have 12 cores, then your system demand is 22 cores. You're short available CPUs.
