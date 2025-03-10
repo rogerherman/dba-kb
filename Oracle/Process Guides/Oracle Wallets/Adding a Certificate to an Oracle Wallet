@@ -1,0 +1,7 @@
+1. First, you will need to open the wallet that you wish to add the certificate to.
+2. Next, you need to already have the certificate. Generally, a certificate file is preferred, since that simplifies adding it.
+3. With the wallet open and cert file ready, use the Wallet Manager menu to add the certificate.
+    a. Click "Operations" -> "Import Trusted Certificate".
+    b. Select the option "Select a file that contains the certificate".
+    c. Click "OK" and navigate to the certificate file you want to add to the wallet.
+4. Once the certificate has been added, click "Wallet" -> "Save" to save your changes to the wallet.
