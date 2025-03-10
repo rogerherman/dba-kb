@@ -1,0 +1,15 @@
+Prerequisites
+1. You will need to have a login for Oracle Enterprise Manager with SUPER ADMINISTRATOR access.
+
+Steps to Remove a Blackout
+1. Navigate to the Blackouts page in OEM
+    a. Enterprise -> Monitoring -> Blackouts
+2. In the middle of the "Blackouts" page is a grid that will list all current blackouts.
+3. Select the blackout from the list that you would like to remove.
+    a. If you don't see the blackout that you expect, you may need to switch to displaying blackouts by name, instead of by targets.
+4. Click on the "Stop" button. OEM will ask you to confirm that you wish to stop the blackout.
+5. Once the blackout is stopped (you may need to hit the refresh button in OEM a few times to update the interface), select the blackout name again.
+6. With the blackout selected, and confirmed as STOPPED, you can then click on the "Delete" button.
+7. This will once again ask you confirm. Click "Delete" to confirm.
+8. The blackout should now be removed from the list.
+    a. This may take a few minutes to take effect, since it needs to contact the Oracle agents and the remote database to confirm.
