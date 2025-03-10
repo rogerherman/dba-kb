@@ -1,0 +1,6 @@
+1. If you want to open an existing Oracle Wallet, launch the Wallet Manager on the server where the wallet is located.
+2. Next, use the main menu and select "Wallet" -> "Open".
+    a. If you receive a prompt that the default wallet directory does not exist and if you wish to continue, click "Yes".
+3. In the "Select Directory" window, navigate to where the wallet is stored.
+    a. The custom default directory we have chosen is "C:\Oracle\Wallets", with a subdirectory for each wallet.
+4. When prompted, provide the password to open the wallet.
